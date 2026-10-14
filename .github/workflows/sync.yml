@@ -1,0 +1,43 @@
+name: Sync Upstream Assets
+
+on:
+  schedule:
+    - cron: '0 0 * * *' # Runs every day at midnight UTC
+  workflow_dispatch: # Allows manual trigger from the GitHub Actions tab
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout your repository
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+
+      - name: Pull changes from upstream
+        env:
+          UPSTREAM_URL: ${{ secrets.UPSTREAM_REPO_URL }}
+        run: |
+          git remote add upstream "$UPSTREAM_URL"
+          git fetch upstream
+          
+          # Configure git identity for automated commits
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          
+          # Merge changes from upstream main branch
+          git merge upstream/main --allow-unrelated-histories -m "Automated sync with upstream assets"
+          
+          # Update the timestamp file with the exact current UTC time
+          date -u +"%Y-%m-%dT%H:%M:%SZ" > .last_updated_pokemon_images
+          
+          # Stage and commit any updates
+          git add .last_updated_pokemon_images
+          git commit -m "Automated sync: update assets and timestamp" || echo "No changes to commit"
+          
+          # Push changes back to your repository
+          git push origin main
