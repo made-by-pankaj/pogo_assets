@@ -31,20 +31,17 @@ jobs:
           
           # Merge changes from upstream main branch
           git merge upstream/main --allow-unrelated-histories -m "Automated sync with upstream assets"
-
-          # Remove any accidental changes to workflows from the upstream repo
-          git checkout HEAD -- .github/workflows/ || true
-
-          # REMOVE any upstream workflow files so they don't trigger permission rejections
+          
+          # Remove any upstream workflow files so they don't trigger permission rejections
           rm -rf .github/workflows/update-assets.yml
           git reset .github/workflows/update-assets.yml || true
           
-          # Update the timestamp file with the exact current UTC time
+          # Update the timestamp file with the exact current UTC run time
           date -u +"%Y-%m-%dT%H:%M:%SZ" > .last_updated_pokemon_images
           
-          # Stage and commit any updates
+          # Stage and commit the timestamp and any asset updates
           git add .last_updated_pokemon_images
-          git commit -m "Automated sync: update assets and timestamp" || echo "No changes to commit"
+          git commit -m "Automated sync: update assets and workflow run timestamp" || echo "No changes to commit"
           
           # Push changes back to your repository
           git push origin main
