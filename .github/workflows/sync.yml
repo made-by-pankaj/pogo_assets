@@ -9,6 +9,7 @@ jobs:
   sync:
     runs-on: ubuntu-latest
     
+    # We only need contents: write since we won't touch workflows anymore
     permissions:
       contents: write
 
@@ -32,15 +33,20 @@ jobs:
           # Merge changes from upstream main branch
           git merge upstream/main --allow-unrelated-histories -m "Automated sync with upstream assets"
           
-          # Remove any upstream workflow files so they don't trigger permission rejections
-          rm -rf .github/workflows/update-assets.yml
-          git reset .github/workflows/update-assets.yml || true
+          # Immediately delete any incoming workflow files from the working tree and index
+          git rm -rf --ignore-unmatch .github/workflows/ || true
+          rm -rf .github/workflows/ || true
+          
+          # Restore YOUR workflow file so it stays safe and untouched in your repo
+          git checkout HEAD -- .github/workflows/sync.yml || true
           
           # Update the timestamp file with the exact current UTC run time
           date -u +"%Y-%m-%dT%H:%M:%SZ" > .last_updated_pokemon_images
           
-          # Stage and commit the timestamp and any asset updates
-          git add .last_updated_pokemon_images
+          # Stage asset changes and timestamp (git status will ignore the restored workflow file because it's unmodified)
+          git add -A
+          
+          # Commit updates
           git commit -m "Automated sync: update assets and workflow run timestamp" || echo "No changes to commit"
           
           # Push changes back to your repository
