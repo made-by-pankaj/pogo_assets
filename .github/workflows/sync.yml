@@ -31,6 +31,9 @@ jobs:
           
           # Merge changes from upstream main branch
           git merge upstream/main --allow-unrelated-histories -m "Automated sync with upstream assets"
+
+          # Remove any accidental changes to workflows from the upstream repo
+          git checkout HEAD -- .github/workflows/ || true
           
           # Update the timestamp file with the exact current UTC time
           date -u +"%Y-%m-%dT%H:%M:%SZ" > .last_updated_pokemon_images
